@@ -17,7 +17,7 @@ CREATE  TABLE IF NOT EXISTS `ci_sessions` (
   PRIMARY KEY (`session_id`) )
 ENGINE = InnoDB
 DEFAULT CHARACTER SET = utf8
-COLLATE = utf8_bin;
+COLLATE = utf8_unicode_ci;
 
 
 -- -----------------------------------------------------
@@ -33,7 +33,7 @@ CREATE  TABLE IF NOT EXISTS `login_attempts` (
   PRIMARY KEY (`id`) )
 ENGINE = InnoDB
 DEFAULT CHARACTER SET = utf8
-COLLATE = utf8_bin;
+COLLATE = utf8_unicode_ci;
 
 
 -- -----------------------------------------------------
@@ -50,7 +50,7 @@ CREATE  TABLE IF NOT EXISTS `user_autologin` (
   PRIMARY KEY (`key_id`, `user_id`) )
 ENGINE = InnoDB
 DEFAULT CHARACTER SET = utf8
-COLLATE = utf8_bin;
+COLLATE = utf8_unicode_ci;
 
 
 -- -----------------------------------------------------
@@ -59,18 +59,18 @@ COLLATE = utf8_bin;
 DROP TABLE IF EXISTS `user_profiles` ;
 
 CREATE  TABLE IF NOT EXISTS `user_profiles` (
-  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT ,
-  `name` VARCHAR(200) NULL DEFAULT '' ,
+  `id` INT UNSIGNED NOT NULL ,
+  `name` VARCHAR(255) NULL DEFAULT '' ,
   `gender` CHAR(1) NULL DEFAULT '' ,
-  `dob` DATE NULL ,
+  `dob` DATE NOT NULL ,
   `country` CHAR(2) CHARACTER SET 'utf8' COLLATE 'utf8_bin' NULL DEFAULT '' ,
+  `timezone` VARCHAR(50) NULL DEFAULT '' ,
   `website` VARCHAR(100) CHARACTER SET 'utf8' COLLATE 'utf8_bin' NULL DEFAULT '' ,
   `modified` TIMESTAMP NOT NULL ,
-  PRIMARY KEY (`id`) ,
-  INDEX `name` (`name` ASC) )
+  PRIMARY KEY (`id`) )
 ENGINE = InnoDB
 DEFAULT CHARACTER SET = utf8
-COLLATE = utf8_bin;
+COLLATE = utf8_unicode_ci;
 
 
 -- -----------------------------------------------------
@@ -86,22 +86,22 @@ CREATE  TABLE IF NOT EXISTS `users` (
   `activated` TINYINT(1) NOT NULL DEFAULT 1 ,
   `banned` TINYINT(1) NOT NULL DEFAULT 0 ,
   `ban_reason` VARCHAR(255) CHARACTER SET 'utf8' COLLATE 'utf8_bin' NULL ,
-  `new_password_key` VARCHAR(50) CHARACTER SET 'utf8' COLLATE 'utf8_bin' NULL ,
+  `new_password_key` CHAR(32) CHARACTER SET 'utf8' COLLATE 'utf8_bin' NULL ,
   `new_password_requested` DATETIME NULL ,
   `new_email` VARCHAR(100) CHARACTER SET 'utf8' COLLATE 'utf8_bin' NULL ,
   `new_email_key` VARCHAR(50) CHARACTER SET 'utf8' COLLATE 'utf8_bin' NULL ,
   `approved` TINYINT(1) NULL COMMENT 'For acct approval.' ,
   `meta` VARCHAR(2000) NULL DEFAULT '' ,
-  `last_ip` VARCHAR(40) CHARACTER SET 'utf8' COLLATE 'utf8_bin' NOT NULL ,
+  `last_ip` VARCHAR(45) CHARACTER SET 'utf8' COLLATE 'utf8_bin' NOT NULL ,
   `last_login` DATETIME NOT NULL ,
   `created` DATETIME NOT NULL ,
   `modified` TIMESTAMP NOT NULL ,
   PRIMARY KEY (`id`) ,
-  INDEX `username` (`username` ASC) ,
-  INDEX `email` (`email` ASC) )
+  UNIQUE INDEX `username_UNIQUE` (`username` ASC) ,
+  UNIQUE INDEX `email_UNIQUE` (`email` ASC) )
 ENGINE = InnoDB
 DEFAULT CHARACTER SET = utf8
-COLLATE = utf8_bin;
+COLLATE = utf8_unicode_ci;
 
 
 -- -----------------------------------------------------
@@ -115,8 +115,11 @@ CREATE  TABLE IF NOT EXISTS `permissions` (
   `description` VARCHAR(160) NULL ,
   `parent` VARCHAR(100) NULL ,
   `sort` TINYINT UNSIGNED NULL ,
-  PRIMARY KEY (`permission_id`) )
-ENGINE = InnoDB;
+  PRIMARY KEY (`permission_id`) ,
+  UNIQUE INDEX `permission_UNIQUE` (`permission` ASC) )
+ENGINE = InnoDB
+DEFAULT CHARACTER SET = utf8
+COLLATE = utf8_unicode_ci;
 
 
 -- -----------------------------------------------------
@@ -125,12 +128,15 @@ ENGINE = InnoDB;
 DROP TABLE IF EXISTS `roles` ;
 
 CREATE  TABLE IF NOT EXISTS `roles` (
-  `role_id` SMALLINT UNSIGNED NOT NULL AUTO_INCREMENT ,
+  `role_id` TINYINT UNSIGNED NOT NULL AUTO_INCREMENT ,
   `role` VARCHAR(50) NOT NULL ,
   `full` VARCHAR(50) NOT NULL ,
   `default` TINYINT(1) NOT NULL ,
-  PRIMARY KEY (`role_id`) )
-ENGINE = InnoDB;
+  PRIMARY KEY (`role_id`) ,
+  UNIQUE INDEX `role_UNIQUE` (`role` ASC) )
+ENGINE = InnoDB
+DEFAULT CHARACTER SET = utf8
+COLLATE = utf8_unicode_ci;
 
 
 -- -----------------------------------------------------
@@ -139,12 +145,24 @@ ENGINE = InnoDB;
 DROP TABLE IF EXISTS `role_permissions` ;
 
 CREATE  TABLE IF NOT EXISTS `role_permissions` (
-  `role_id` SMALLINT UNSIGNED NOT NULL ,
+  `role_id` TINYINT UNSIGNED NOT NULL ,
   `permission_id` SMALLINT UNSIGNED NOT NULL ,
   PRIMARY KEY (`role_id`, `permission_id`) ,
-  INDEX `role_id_idx` (`role_id` ASC) ,
-  INDEX `task_id_idx` (`permission_id` ASC) )
-ENGINE = InnoDB;
+  INDEX `role_id2_idx` (`role_id` ASC) ,
+  INDEX `permission_id2_idx` (`permission_id` ASC) ,
+  CONSTRAINT `role_id2`
+    FOREIGN KEY (`role_id` )
+    REFERENCES `roles` (`role_id` )
+    ON DELETE CASCADE
+    ON UPDATE NO ACTION,
+  CONSTRAINT `permission_id2`
+    FOREIGN KEY (`permission_id` )
+    REFERENCES `permissions` (`permission_id` )
+    ON DELETE CASCADE
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB
+DEFAULT CHARACTER SET = utf8
+COLLATE = utf8_unicode_ci;
 
 
 -- -----------------------------------------------------
@@ -154,11 +172,23 @@ DROP TABLE IF EXISTS `user_roles` ;
 
 CREATE  TABLE IF NOT EXISTS `user_roles` (
   `user_id` INT UNSIGNED NOT NULL ,
-  `role_id` SMALLINT UNSIGNED NOT NULL ,
+  `role_id` TINYINT UNSIGNED NOT NULL ,
   PRIMARY KEY (`user_id`, `role_id`) ,
-  INDEX `user_id_idx` (`user_id` ASC) ,
-  INDEX `role_id_idx` (`role_id` ASC) )
-ENGINE = InnoDB;
+  INDEX `user_id2_idx` (`user_id` ASC) ,
+  INDEX `role_id1_idx` (`role_id` ASC) ,
+  CONSTRAINT `user_id2`
+    FOREIGN KEY (`user_id` )
+    REFERENCES `users` (`id` )
+    ON DELETE CASCADE
+    ON UPDATE NO ACTION,
+  CONSTRAINT `role_id1`
+    FOREIGN KEY (`role_id` )
+    REFERENCES `roles` (`role_id` )
+    ON DELETE CASCADE
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB
+DEFAULT CHARACTER SET = utf8
+COLLATE = utf8_unicode_ci;
 
 
 -- -----------------------------------------------------
@@ -171,9 +201,21 @@ CREATE  TABLE IF NOT EXISTS `overrides` (
   `permission_id` SMALLINT UNSIGNED NOT NULL ,
   `allow` TINYINT(1) UNSIGNED NOT NULL ,
   PRIMARY KEY (`user_id`, `permission_id`) ,
-  INDEX `user_id_idx` (`user_id` ASC) ,
-  INDEX `task_id_idx` (`permission_id` ASC) )
-ENGINE = InnoDB;
+  INDEX `user_id1_idx` (`user_id` ASC) ,
+  INDEX `permissions_id1_idx` (`permission_id` ASC) ,
+  CONSTRAINT `user_id1`
+    FOREIGN KEY (`user_id` )
+    REFERENCES `users` (`id` )
+    ON DELETE CASCADE
+    ON UPDATE NO ACTION,
+  CONSTRAINT `permission_id1`
+    FOREIGN KEY (`permission_id` )
+    REFERENCES `permissions` (`permission_id` )
+    ON DELETE CASCADE
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB
+DEFAULT CHARACTER SET = utf8
+COLLATE = utf8_unicode_ci;
 
 
 
@@ -182,39 +224,10 @@ SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS;
 SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS;
 
 -- -----------------------------------------------------
--- Data for table `permissions`
--- -----------------------------------------------------
-START TRANSACTION;
-INSERT INTO `permissions` (`permission_id`, `permission`, `description`, `parent`, `sort`) VALUES (1, 'buy stuff', 'Buying me some goodies', 'I want chicken for dinner', NULL);
-INSERT INTO `permissions` (`permission_id`, `permission`, `description`, `parent`, `sort`) VALUES (2, 'watch movie', 'Movietime yo', 'I want chicken for dinner', NULL);
-INSERT INTO `permissions` (`permission_id`, `permission`, `description`, `parent`, `sort`) VALUES (3, 'eat food', 'Eat lots of food', 'I want chicken for dinner', NULL);
-INSERT INTO `permissions` (`permission_id`, `permission`, `description`, `parent`, `sort`) VALUES (4, 'clean cat', 'Clean that dirty cat!', 'Will Codeigniter for food', 3);
-INSERT INTO `permissions` (`permission_id`, `permission`, `description`, `parent`, `sort`) VALUES (5, 'win lottery', 'Yipeeee!', 'Will Codeigniter for food', 2);
-INSERT INTO `permissions` (`permission_id`, `permission`, `description`, `parent`, `sort`) VALUES (6, 'kiss girl', 'Kissy, kissy', 'Will Codeigniter for food', 1);
-
-COMMIT;
-
--- -----------------------------------------------------
 -- Data for table `roles`
 -- -----------------------------------------------------
 START TRANSACTION;
 INSERT INTO `roles` (`role_id`, `role`, `full`, `default`) VALUES (1, 'admin', 'Administrator', 0);
-INSERT INTO `roles` (`role_id`, `role`, `full`, `default`) VALUES (2, 'mod', 'Moderator', 0);
-INSERT INTO `roles` (`role_id`, `role`, `full`, `default`) VALUES (3, 'user', 'User', 1);
-
-COMMIT;
-
--- -----------------------------------------------------
--- Data for table `role_permissions`
--- -----------------------------------------------------
-START TRANSACTION;
-INSERT INTO `role_permissions` (`role_id`, `permission_id`) VALUES (1, 1);
-INSERT INTO `role_permissions` (`role_id`, `permission_id`) VALUES (1, 2);
-INSERT INTO `role_permissions` (`role_id`, `permission_id`) VALUES (1, 3);
-INSERT INTO `role_permissions` (`role_id`, `permission_id`) VALUES (1, 4);
-INSERT INTO `role_permissions` (`role_id`, `permission_id`) VALUES (2, 1);
-INSERT INTO `role_permissions` (`role_id`, `permission_id`) VALUES (2, 2);
-INSERT INTO `role_permissions` (`role_id`, `permission_id`) VALUES (3, 3);
-INSERT INTO `role_permissions` (`role_id`, `permission_id`) VALUES (3, 4);
+INSERT INTO `roles` (`role_id`, `role`, `full`, `default`) VALUES (2, 'user', 'User', 1);
 
 COMMIT;

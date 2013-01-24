@@ -189,10 +189,10 @@ class Tank_auth
 				'approved'=>(int)$this->ci->config->item('acct_approval', 'tank_auth')
 			);
 			
-			if($custom) $data['meta'] = $custom;
+			$data['meta'] = $custom ? $custom : '';
 
 			if ($email_activation) {
-				$data['new_email_key'] = md5(rand().microtime());
+				$data['new_email_key'] = $this->generate_random_key();
 			}
 			if (!is_null($res = $this->ci->users->create_user($data, !$email_activation))) {
 				$data['user_id'] = $res['user_id'];
@@ -201,6 +201,7 @@ class Tank_auth
 				return $data;
 			}
 		}
+
 		return NULL;
 	}
 
@@ -252,7 +253,7 @@ class Tank_auth
 				return $data;
 
 			} elseif ($this->ci->users->is_email_available($email)) {
-				$data['new_email_key'] = md5(rand().microtime());
+				$data['new_email_key'] = $this->generate_random_key();
 				$this->ci->users->set_new_email($user_id, $email, $data['new_email_key'], FALSE);
 				return $data;
 
@@ -298,7 +299,7 @@ class Tank_auth
 					'user_id'		=> $user->id,
 					'username'		=> $user->username,
 					'email'			=> $user->email,
-					'new_pass_key'	=> md5(rand().microtime()),
+					'new_pass_key'	=> $this->generate_random_key(),
 				);
 
 				$this->ci->users->set_password_key($user->id, $data['new_pass_key']);
@@ -438,7 +439,7 @@ class Tank_auth
 					return $data;
 
 				} elseif ($this->ci->users->is_email_available($new_email)) {
-					$data['new_email_key'] = md5(rand().microtime());
+					$data['new_email_key'] = $this->generate_random_key();
 					$this->ci->users->set_new_email($user_id, $new_email, $data['new_email_key'], TRUE);
 					return $data;
 
@@ -518,7 +519,7 @@ class Tank_auth
 	private function create_autologin($user_id)
 	{
 		$this->ci->load->helper('cookie');
-		$key = substr(md5(uniqid(rand().get_cookie($this->ci->config->item('sess_cookie_name')))), 0, 16);
+		$key = substr(md5(uniqid(mt_rand().get_cookie($this->ci->config->item('sess_cookie_name')))), 0, 16);
 
 		$this->ci->load->model('tank_auth/user_autologin');
 		$this->ci->user_autologin->purge($user_id);
@@ -662,24 +663,49 @@ class Tank_auth
 	 * array where $arr[0] is the key and $arr[1] is the value.
 	 *
 	 * @param array $result_array: The result of $query->result_array()
+	 * @param array $first Append details to the beginning of the array
+	 * @param string $return Return value: 'array|option|li'
+	 * @param string $default Checked value (used if 'option' is selected in $return)
 	 */
-	public function multi_to_assoc($result_array){
+	function multi_to_assoc($result_array, $first = array(), $return = 'array', $default = FALSE){
 		foreach($result_array as $val){
 			$val = array_values($val);
 			$arr[$val[0]] = $val[1];
 		}
+
+		if($first) $arr = array_merge($first, $arr);
 		
-		return $arr;
+		if($return == 'array'){
+			return $arr;
+		}
+		elseif($return == 'option'){
+			$option_arr = '';
+			foreach($arr as $key=>$val){
+				$selected = $default;
+				$selected = $default == $key ? 'selected' : '';
+				$option_arr .= "<option value='{$key}' {$selected}>{$val}</option>";
+			}
+
+			return $option_arr;
+		}
+		elseif($return == 'li'){
+			$li_arr = '';
+			foreach($arr as $key=>$val){
+				$li_arr .= "<li>{$val}</li>";
+			}
+
+			return $li_arr;
+		}
 	}
 	
 	/**
-	 * Gets $query->result_array() except this deals with only the first element of each array.
+	 * Gets result_array() except this deals with only the first element of each array.
 	 * This gets the value of that first element and saves them in an array.
 	 * This works on indexed and assoc arrays.
 	 *
 	 * @param array $result_array: The result of $query->result_array()
 	 */
-	public function multi_to_single($result_array){
+	function multi_to_single($result_array){
 		$keys = array_keys($result_array[0]);
 		foreach($result_array as $val){
 			$arr[] = $val[$keys[0]];
@@ -735,7 +761,7 @@ class Tank_auth
 	/**
 	 * Overriding permissions method
 	 */
-	public function add_override($user_id, $permission, $allow){
+	public function add_override($user_id, $permission, $allow = 1){
 		return $this->ci->users->add_override($user_id, $permission, $allow);
 	}
 	public function remove_override($user_id, $permission){
@@ -819,14 +845,34 @@ class Tank_auth
 
 		$this->ci->session->set_flashdata('tankauth_allow_notice', TRUE);
 		$this->ci->session->set_flashdata('tankauth_notice_data', $data);
-		redirect('/notice/view/'.$page);
+		redirect('/welcome/notice/'.$page);
 	}
 	
 	/**
-	 *
+	 * Gets values from the db for use in a dropdown field for new registrations
+	 * @param array $fields 2 column names which will form the <select> key=>value pair
+	 * @param string $where Create a more detailed query for example: "WHERE a=b LIMIT 10" It's up to you.
+	 * @return multi array|option|li (default: array)
 	 */
 	public function create_regdb_dropdown($dbname, $fields){
 		return $this->ci->users->create_regdb_dropdown($dbname, $fields);
+	}
+
+
+	/**
+	 * Generate a random string based on kernel's random number generator
+	 * @return string
+	 */
+	public function generate_random_key(){
+    if ( function_exists('openssl_random_pseudo_bytes') ){
+      $key = md5(openssl_random_pseudo_bytes(1024, $cstrong) . microtime() . mt_rand() );
+    }
+    else {
+    	$randomizer = file_exists('/dev/urandom') ? '/dev/urandom' : '/dev/random';
+	    $key = md5(file_get_contents($randomizer, NULL, NULL, 0, 1024) . microtime() . mt_rand());
+    }
+
+    return $key;
 	}
 }
 

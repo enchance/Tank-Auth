@@ -788,6 +788,8 @@ class Users extends CI_Model
 	
 	/**
 	 * Approve a user
+	 * @param int $user_id User ID
+	 * @return bool
 	 */
 	public function approve_user($user_id){
 		return $this->db->query("UPDATE {$this->table_name} SET approved=? WHERE id=?", array(1, $user_id));
@@ -795,6 +797,8 @@ class Users extends CI_Model
 	
 	/**
 	 * Unapprove a user
+	 * @param int $user_id User ID
+	 * @return bool
 	 */
 	public function unapprove_user($user_id){
 		return $this->db->query("UPDATE {$this->table_name} SET approved=? WHERE id=?", array(0, $user_id));
@@ -802,19 +806,21 @@ class Users extends CI_Model
 
 	
 	/**
-	 *
+	 * Gets values from the db for use in a dropdown field for new registrations
+	 * @param array $fields 2 column names which will form the <select> key=>value pair
+	 * @param string $where Create a more detailed query for example: "WHERE a=b LIMIT 10" It's up to you.
+	 * @return multi array|option|li (default: array)
 	 */
-	public function create_regdb_dropdown($dbname, $fields){
+	public function create_regdb_dropdown($dbname, $fields, $where = ''){
 		// If you typed 3 fields, this makes sure you only get the first 2
 		$arr[] = $fields[0];
 		$arr[] = $fields[1];
 		$str = implode(', ', $arr);
 		$dbname = $dbname[0];
 		
-		$query = $this->db->query("SELECT {$str} FROM {$dbname}");
+		$query = $this->db->query(trim("SELECT {$str} FROM {$dbname} {$where}"));
 		$row = $query->result_array();
-		$row = $this->tank_auth->multi_to_assoc($row);
-		$row = array_merge(array('0'=>'- choose -'), $row);
+		$row = $this->tank_auth->multi_to_assoc($row, array('0'=>'- choose -'));
 		
 		return $row;
 	}
