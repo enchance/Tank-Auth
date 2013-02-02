@@ -5,6 +5,7 @@ $login = array(
 	'value' => set_value('login'),
 	'maxlength'	=> 80,
 	'size'	=> 30,
+	'autocomplete' => 'off'
 );
 if ($login_by_username AND $login_by_email) {
 	$login_label = 'Email or login';
@@ -17,6 +18,7 @@ $password = array(
 	'name'	=> 'password',
 	'id'	=> 'password',
 	'size'	=> 30,
+	'autocomplete' => 'off'
 );
 $remember = array(
 	'name'	=> 'remember',
@@ -24,11 +26,13 @@ $remember = array(
 	'value'	=> 1,
 	'checked'	=> set_value('remember'),
 	'style' => 'margin:0;padding:0',
+	'autocomplete' => 'off'
 );
 $captcha = array(
 	'name'	=> 'captcha',
 	'id'	=> 'captcha',
 	'maxlength'	=> 8,
+	'autocomplete' => 'off'
 );
 ?>
 <?php echo form_open($this->uri->uri_string()); ?>

@@ -3,6 +3,7 @@ $password = array(
 	'name'	=> 'password',
 	'id'	=> 'password',
 	'size'	=> 30,
+	'autocomplete' => 'off'
 );
 ?>
 <?php echo form_open($this->uri->uri_string()); ?>

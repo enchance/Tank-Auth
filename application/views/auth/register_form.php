@@ -7,6 +7,7 @@ if ($use_username) {
 		'value' => set_value('username'),
 		'maxlength'	=> $this->config->item('username_max_length', 'tank_auth'),
 		'size'	=> 30,
+		'autocomplete' => 'off'
 	);
 }
 $email = array(
@@ -15,6 +16,7 @@ $email = array(
 	'value'	=> set_value('email'),
 	'maxlength'	=> 80,
 	'size'	=> 30,
+	'autocomplete' => 'off'
 );
 $password = array(
 	'name'	=> 'password',
@@ -22,6 +24,7 @@ $password = array(
 	'value' => set_value('password'),
 	'maxlength'	=> $this->config->item('password_max_length', 'tank_auth'),
 	'size'	=> 30,
+	'autocomplete' => 'off'
 );
 $confirm_password = array(
 	'name'	=> 'confirm_password',
@@ -29,11 +32,13 @@ $confirm_password = array(
 	'value' => set_value('confirm_password'),
 	'maxlength'	=> $this->config->item('password_max_length', 'tank_auth'),
 	'size'	=> 30,
+	'autocomplete' => 'off'
 );
 $captcha = array(
 	'name'	=> 'captcha',
 	'id'	=> 'captcha',
 	'maxlength'	=> 8,
+	'autocomplete' => 'off'
 );
 
 ?>

@@ -5,6 +5,7 @@ $login = array(
 	'value' => set_value('login'),
 	'maxlength'	=> 80,
 	'size'	=> 30,
+	'autocomplete' => 'off'
 );
 if ($this->config->item('use_username', 'tank_auth')) {
 	$login_label = 'Email or login';

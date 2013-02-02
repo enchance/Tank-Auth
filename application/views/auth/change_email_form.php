@@ -3,6 +3,7 @@ $password = array(
 	'name'	=> 'password',
 	'id'	=> 'password',
 	'size'	=> 30,
+	'autocomplete' => 'off'
 );
 $email = array(
 	'name'	=> 'email',
@@ -10,6 +11,7 @@ $email = array(
 	'value'	=> set_value('email'),
 	'maxlength'	=> 80,
 	'size'	=> 30,
+	'autocomplete' => 'off'
 );
 ?>
 <?php echo form_open($this->uri->uri_string()); ?>
