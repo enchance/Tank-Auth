@@ -1,7 +1,3 @@
-UPDATE: Fork merged with main Tank Auth repo :-)
-------------------------------------------------
-**[Tank Auth v2.0](https://github.com/ilkon/Tank-Auth)** will be coming out soon which will include some new features from this fork. Until full integration has been completed, this fork will be upgraded in batches taken from `upstream`.
-
 Thanks for everyone who used my *RBAC-powered* version of Tank Auth!
 
 Tank Auth w/ Role-Based Access Control (RBAC)
